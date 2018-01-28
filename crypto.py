@@ -7,24 +7,33 @@ import datetime
 
 
 def print_currency(c):
-    print('{:<14}{:>10}'.format('"%s",' % c['name'], '$' + c['price_usd']))
+    print('{:<14}{:>10}'.format('"%s",' % c['name'], '$' + c['price_sek']))
 
 
 def get_symbols(sheet):
     values = sheet.row_values(1)
-    symbols = []
+    counts = sheet.row_values(2)
+    symbols = {}
+    i = 1
     for value in values[1:]:
-        if not value:
-            continue
-        symbols.append(value)
+        if value:
+            symbols[value] = float(counts[i])
+        i = i + 1
     return symbols
 
 
+def get_total(symbols, currencies):
+    total = 0
+    for key, value in symbols.items():
+        count = symbols[key]
+        total = total + count * float(get_value(currencies[key]))
+    return total
+
 def get_value(c):
-    return c['price_usd']
+    return c['price_sek']
 
 def get_currencies(symbols):
-    r = requests.get('https://api.coinmarketcap.com/v1/ticker/')
+    r = requests.get('https://api.coinmarketcap.com/v1/ticker/?convert=SEK&limit=20')
     json = r.json()
     currencies = {}
 
@@ -43,17 +52,20 @@ credential_path = os.path.join(credential_dir, 'client_secret.json')
 creds = ServiceAccountCredentials.from_json_keyfile_name(credential_path, scope)
 client = gspread.authorize(creds)
 
-sheet = client.open("Coins").worksheets()[1]
+input_sheet = client.open("Coins").worksheets()[0]
+output_sheet = client.open("Coins").worksheets()[1]
 
 time = datetime.datetime.now().isoformat(sep=' ')
 values = [time]
 
-symbols = get_symbols(sheet)
+symbols = get_symbols(input_sheet)
 print(symbols)
 currencies = get_currencies(symbols)
 for sym in symbols:
     c = currencies[sym]
     values.append(get_value(c))
+total = get_total(symbols, currencies)
+values.insert(1, total)
 print('adding: ', values)
-sheet.append_row(values)
+output_sheet.append_row(values)
 
