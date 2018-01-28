@@ -13,13 +13,15 @@ def print_currency(c):
 def get_symbols(sheet):
     values = sheet.row_values(1)
     counts = sheet.row_values(2)
-    symbols = {}
+    sym_count = {}
+    symbols = []
     i = 1
     for value in values[1:]:
         if value:
-            symbols[value] = float(counts[i])
+            symbols.append(value)
+            sym_count[value] = float(counts[i])
         i = i + 1
-    return symbols
+    return symbols, sym_count
 
 
 def get_total(symbols, currencies):
@@ -58,13 +60,13 @@ output_sheet = client.open("Coins").worksheets()[1]
 time = datetime.datetime.now().isoformat(sep=' ')
 values = [time]
 
-symbols = get_symbols(input_sheet)
+symbols, sym_count = get_symbols(input_sheet)
 print(symbols)
 currencies = get_currencies(symbols)
 for sym in symbols:
     c = currencies[sym]
     values.append(get_value(c))
-total = get_total(symbols, currencies)
+total = get_total(sym_count, currencies)
 values.insert(1, total)
 print('adding: ', values)
 output_sheet.append_row(values)
