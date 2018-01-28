@@ -53,33 +53,36 @@ def get_currencies(symbols):
     return currencies
 
 
-# use creds to create a client to interact with the Google Drive API
-scope = ['https://spreadsheets.google.com/feeds']
-home_dir = os.path.expanduser('~')
-credential_dir = os.path.join(home_dir, 'Dropbox', '.credentials')
-credential_path = os.path.join(credential_dir, 'client_secret.json')
-creds = ServiceAccountCredentials.from_json_keyfile_name(credential_path, scope)
-client = gspread.authorize(creds)
+def main():
+    # use creds to create a client to interact with the Google Drive API
+    scope = ['https://spreadsheets.google.com/feeds']
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, 'Dropbox', '.credentials')
+    credential_path = os.path.join(credential_dir, 'client_secret.json')
+    creds = ServiceAccountCredentials.from_json_keyfile_name(credential_path, scope)
+    client = gspread.authorize(creds)
 
-input_sheet = client.open("Coins").worksheets()[0]
-prices_sheet = client.open("Coins").worksheets()[1]
-totals_sheet = client.open("Coins").worksheets()[2]
+    input_sheet = client.open("Coins").worksheets()[0]
+    prices_sheet = client.open("Coins").worksheets()[1]
+    totals_sheet = client.open("Coins").worksheets()[2]
 
-time = datetime.datetime.now().isoformat(sep=' ')
-prices = [time]
-totals = [time]
+    time = datetime.datetime.now().isoformat(sep=' ')
+    prices = [time]
+    totals = [time]
 
-symbols, sym_count = get_symbols(input_sheet)
-print(symbols)
-currencies = get_currencies(symbols)
-for sym in symbols:
-    c = currencies[sym]
-    prices.append(get_price(c))
-    totals.append(get_value(sym_count, c))
-total = get_total(sym_count, currencies)
-totals.insert(1, total)
-print('prices: ', prices)
-prices_sheet.append_row(prices)
-print('totals: ', totals)
-totals_sheet.append_row(totals)
+    symbols, sym_count = get_symbols(input_sheet)
+    print(symbols)
+    currencies = get_currencies(symbols)
+    for sym in symbols:
+        c = currencies[sym]
+        prices.append(get_price(c))
+        totals.append(get_value(sym_count, c))
+    total = get_total(sym_count, currencies)
+    totals.insert(1, total)
+    print('prices: ', prices)
+    prices_sheet.append_row(prices)
+    print('totals: ', totals)
+    totals_sheet.append_row(totals)
 
+
+main()
