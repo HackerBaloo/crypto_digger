@@ -24,15 +24,22 @@ def get_symbols(sheet):
     return symbols, sym_count
 
 
-def get_total(symbols, currencies):
+def get_total(sym_count, currencies):
     total = 0
-    for key, value in symbols.items():
-        count = symbols[key]
-        total = total + count * float(get_value(currencies[key]))
+    for key, value in sym_count.items():
+        currency = currencies[key]
+        total = total + get_value(sym_count, currency)
     return total
 
-def get_value(c):
+
+def get_value(sym_count, currency):
+    count = sym_count[currency['symbol']]
+    return count * float(get_price(currency))
+
+
+def get_price(c):
     return c['price_sek']
+
 
 def get_currencies(symbols):
     r = requests.get('https://api.coinmarketcap.com/v1/ticker/?convert=SEK&limit=20')
@@ -55,19 +62,24 @@ creds = ServiceAccountCredentials.from_json_keyfile_name(credential_path, scope)
 client = gspread.authorize(creds)
 
 input_sheet = client.open("Coins").worksheets()[0]
-output_sheet = client.open("Coins").worksheets()[1]
+prices_sheet = client.open("Coins").worksheets()[1]
+totals_sheet = client.open("Coins").worksheets()[2]
 
 time = datetime.datetime.now().isoformat(sep=' ')
-values = [time]
+prices = [time]
+totals = [time]
 
 symbols, sym_count = get_symbols(input_sheet)
 print(symbols)
 currencies = get_currencies(symbols)
 for sym in symbols:
     c = currencies[sym]
-    values.append(get_value(c))
+    prices.append(get_price(c))
+    totals.append(get_value(sym_count, c))
 total = get_total(sym_count, currencies)
-values.insert(1, total)
-print('adding: ', values)
-output_sheet.append_row(values)
+totals.insert(1, total)
+print('prices: ', prices)
+prices_sheet.append_row(prices)
+print('totals: ', totals)
+totals_sheet.append_row(totals)
 
