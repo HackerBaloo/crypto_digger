@@ -54,13 +54,7 @@ def get_currencies(symbols):
 
 
 def main():
-    # use creds to create a client to interact with the Google Drive API
-    scope = ['https://spreadsheets.google.com/feeds']
-    home_dir = os.path.expanduser('~')
-    credential_dir = os.path.join(home_dir, 'Dropbox', '.credentials')
-    credential_path = os.path.join(credential_dir, 'client_secret.json')
-    creds = ServiceAccountCredentials.from_json_keyfile_name(credential_path, scope)
-    client = gspread.authorize(creds)
+    client = login()
 
     input_sheet = client.open("Coins").worksheets()[0]
     prices_sheet = client.open("Coins").worksheets()[1]
@@ -83,6 +77,16 @@ def main():
     prices_sheet.append_row(prices)
     print('totals: ', totals)
     totals_sheet.append_row(totals)
+
+
+def login():
+    scope = ['https://spreadsheets.google.com/feeds']
+    home_dir = os.path.expanduser('~')
+    credential_dir = os.path.join(home_dir, 'Dropbox', '.credentials')
+    credential_path = os.path.join(credential_dir, 'client_secret.json')
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(credential_path, scope)
+    client = gspread.authorize(credentials)
+    return client
 
 
 main()
